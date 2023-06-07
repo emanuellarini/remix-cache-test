@@ -3,30 +3,24 @@ import type { ActionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Form from '@radix-ui/react-form';
-import TextField from '../components/ui/TextField';
 import Button from '../components/ui/Button';
 import axiosClient from "../axiosClient";
-import Z from 'zod';
-
-const formSchema = Z.object({
-  name: Z.string({ required_error: 'Field is required' }).min(3).max(20),
-  purchaseOrderNumber: Z.string().max(20),
-  jobNumber: Z.string().max(20)
-});
+import {storeValidationSchema} from "../components/Projects/validationSchemas";
+import FormFields from "../components/Projects/FormFields";
 
 export async function action({ request }: ActionArgs) {
   const body = await request.formData();
   const data = Object.fromEntries(body);
 
   try {
-    formSchema.parse(data);
+    storeValidationSchema.parse(data);
   } catch (e) {
     const errors = e.issues.reduce((acc, value) => {
       acc[value.path[0]] = value.message;
       return acc;
     }, {});
 
-    return json({ errors});
+    return json({ errors });
   }
 
   await axiosClient.post('/projects', data);
@@ -37,6 +31,9 @@ export async function action({ request }: ActionArgs) {
 export default function Page() {
   const navigation = useNavigation();
   const navigate = useNavigate();
+  const data = useActionData();
+
+  console.log(data)
 
   return (
     <Dialog.Root open onOpenChange={() => navigate('/projects')}>
@@ -48,26 +45,7 @@ export default function Page() {
 
         <Form.Root asChild>
           <RemixForm method="POST">
-            <TextField
-              name="name"
-              label="Name"
-              min="3"
-              max="20"
-              autoFocus
-              required
-            />
-
-            <TextField
-              name="purchaseOrderNumber"
-              max="20"
-              label="Purchase Order Number"
-            />
-
-            <TextField
-              name="jobNumber"
-              max="20"
-              label="Job Number"
-            />
+            <FormFields errors={data?.errors}  />
 
             <div className="flex align-items justify-end mt-6">
               <Button type="submit" className="mr-1">
