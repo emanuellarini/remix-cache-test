@@ -4,7 +4,8 @@ export default function Page() {
   return (
     <>
       <Outlet />
-      <div>dashboard</div>
+
+      <h1 className="text-xl">Dashboard</h1>
     </>
-  );
+  )
 }
